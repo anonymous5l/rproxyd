@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"strings"
 
 	"github.com/anonymous5l/console"
 
@@ -13,18 +14,21 @@ import (
 )
 
 type ReverseProxyHandler struct {
-	proxyUrl url.URL
+	proxyUrl     url.URL
+	customHeader []string
 }
 
-func NewReverseProxyHandler(proxyUrl url.URL) *ReverseProxyHandler {
+func NewReverseProxyHandler(proxyUrl url.URL, ch []string) *ReverseProxyHandler {
 	return &ReverseProxyHandler{
-		proxyUrl: proxyUrl,
+		proxyUrl:     proxyUrl,
+		customHeader: ch,
 	}
 }
 
 func (p *ReverseProxyHandler) Handle(request *fasthttp.RequestCtx) {
 	u := p.proxyUrl
 	u.Path = filepath.Join(p.proxyUrl.Path, string(request.Path()))
+	u.RawQuery = string(request.URI().QueryString())
 
 	postBody := request.PostBody()
 
@@ -64,6 +68,13 @@ func (p *ReverseProxyHandler) Handle(request *fasthttp.RequestCtx) {
 		for _, v := range value {
 			request.Response.Header.Set(key, v)
 			//console.Log("response header %s %s", key, v)
+		}
+	}
+
+	// replace with customHeader
+	for _, v := range p.customHeader {
+		if idx := strings.Index(v, ":"); idx > 0 {
+			request.Response.Header.Set(v[:idx], v[idx+1:])
 		}
 	}
 

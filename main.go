@@ -35,7 +35,9 @@ func StartHttpProxy(c *cli.Context) error {
 		return err
 	}
 
-	handler := NewReverseProxyHandler(*u)
+	customHeaders := c.StringSlice("header")
+
+	handler := NewReverseProxyHandler(*u, customHeaders)
 
 	cert := c.String("cert")
 	key := c.String("key")
@@ -146,6 +148,11 @@ func main() {
 			Value:  "",
 			EnvVar: "RPROXY_TLS_KEY",
 			Usage:  "enable tls proxy private key",
+		},
+		cli.StringSliceFlag{
+			Name:   "header",
+			EnvVar: "RPROXY_HEADER",
+			Usage:  "custom header out response",
 		},
 	}
 
