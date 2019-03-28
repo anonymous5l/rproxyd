@@ -69,6 +69,8 @@ func StartHttpProxy(c *cli.Context) error {
 		return err
 	}
 
+	console.Ok("start listening on %s", c.String("bind"))
+
 	for {
 		var fconn net.Conn
 
@@ -88,11 +90,11 @@ func StartHttpProxy(c *cli.Context) error {
 		}
 
 		if t == hack.IdentityHttp {
-			console.Log("net: handle http conn")
+			//console.Log("net: handle http conn")
 			fconn = iconn
 		} else if t == hack.IdentityHttps {
 			if tlsConfig != nil {
-				console.Log("net: handle https conn")
+				//console.Log("net: handle https conn")
 				fconn = tls.Server(iconn, tlsConfig)
 			}
 		}
@@ -103,10 +105,10 @@ func StartHttpProxy(c *cli.Context) error {
 		}
 
 		go func(conn net.Conn) {
-			err = fasthttp.ServeConn(conn, handler.Handle)
-			if err != nil {
-				console.Err("handle: %s", err)
-			}
+			_ = fasthttp.ServeConn(conn, handler.Handle)
+			//if err != nil {
+			//	console.Err("handle: %s", err)
+			//}
 		}(fconn)
 	}
 }

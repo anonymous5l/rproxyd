@@ -26,9 +26,11 @@ func (p *ReverseProxyHandler) Handle(request *fasthttp.RequestCtx) {
 	u := p.proxyUrl
 	u.Path = filepath.Join(p.proxyUrl.Path, string(request.Path()))
 
-	console.Log("request %s", u.String())
+	postBody := request.PostBody()
 
-	req, err := http.NewRequest(string(request.Method()), u.String(), bytes.NewReader(request.PostBody()))
+	console.Log("%s %s", request.Method(), u.String())
+
+	req, err := http.NewRequest(string(request.Method()), u.String(), bytes.NewReader(postBody))
 
 	if err != nil {
 		request.SetStatusCode(500)
@@ -41,9 +43,14 @@ func (p *ReverseProxyHandler) Handle(request *fasthttp.RequestCtx) {
 		// key fix
 		if sk == "Host" {
 			sv = u.Host
+		} else if sk == "Origin" || sk == "Referer" {
+			if ou, err := url.Parse(sv); err == nil {
+				ou.Host = u.Host
+				sv = ou.String()
+			}
 		}
 		req.Header.Set(sk, sv)
-		console.Log("request header %s: %s", sk, sv)
+		//console.Log("request header %s: %s", sk, sv)
 	})
 
 	resp, err := http.DefaultTransport.RoundTrip(req)
@@ -56,7 +63,7 @@ func (p *ReverseProxyHandler) Handle(request *fasthttp.RequestCtx) {
 	for key, value := range resp.Header {
 		for _, v := range value {
 			request.Response.Header.Set(key, v)
-			console.Log("response header %s %s", key, v)
+			//console.Log("response header %s %s", key, v)
 		}
 	}
 
