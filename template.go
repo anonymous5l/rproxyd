@@ -96,17 +96,22 @@ func (te *TemplateEntity) AppendItem(info os.FileInfo, path string) {
 func (te *TemplateEntity) Sort() {
 	items := []TemplateItem{}
 
+	trigger := false
+
 	for _, v := range te.Items {
 		if v.IsDir {
 			items = append(items, v)
+			trigger = true
 		}
 	}
 
-	for _, v := range te.Items {
-		if !v.IsDir {
-			items = append(items, v)
+	if trigger {
+		for _, v := range te.Items {
+			if !v.IsDir {
+				items = append(items, v)
+			}
 		}
-	}
 
-	te.Items = items
+		te.Items = items
+	}
 }
