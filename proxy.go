@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -39,6 +38,10 @@ func (p *ReverseProxyHandler) Handle(request *fasthttp.RequestCtx) {
 
 	request.Request.Header.VisitAll(func(k, v []byte) {
 		sk, sv := string(k), string(v)
+		// key fix
+		if sk == "Host" {
+			sv = u.Host
+		}
 		req.Header.Set(sk, sv)
 		console.Log("request header %s: %s", sk, sv)
 	})
@@ -50,19 +53,13 @@ func (p *ReverseProxyHandler) Handle(request *fasthttp.RequestCtx) {
 		return
 	}
 
-	defer resp.Body.Close()
-
 	for key, value := range resp.Header {
 		for _, v := range value {
-			request.Response.Header.Add(key, v)
+			request.Response.Header.Set(key, v)
 			console.Log("response header %s %s", key, v)
 		}
 	}
 
 	request.SetStatusCode(resp.StatusCode)
-	//request.SetBodyStream(resp.Body, -1)
-	_, err = io.Copy(request.Response.BodyWriter(), resp.Body)
-	if err != nil {
-		console.Err("io copy: %s", err)
-	}
+	request.SetBodyStream(resp.Body, -1)
 }
