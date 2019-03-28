@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -11,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/anonymous5l/console"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/valyala/fasthttp"
 )
 
@@ -35,6 +37,14 @@ func (p *ReverseProxyHandler) writeFile(request *fasthttp.RequestCtx, file strin
 		request.SetBody([]byte(fmt.Sprint("can't open file %s err %s", file, err)))
 		return
 	}
+
+	if mime, _, err := mimetype.DetectReader(f); err != nil {
+		request.SetContentType("application/octet-stream")
+	} else {
+		request.SetContentType(mime)
+	}
+
+	_, _ = f.Seek(io.SeekStart, 0)
 
 	request.SetBodyStream(f, -1)
 }
@@ -84,7 +94,6 @@ func (p *ReverseProxyHandler) HandleIndex(request *fasthttp.RequestCtx, u url.UR
 		// list directory
 		p.listDirectory(request, u.Path)
 	case mode.IsRegular():
-		request.SetContentType("application/octet-stream")
 		p.writeFile(request, u.Path)
 		return
 	}

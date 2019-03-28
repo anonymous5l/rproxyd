@@ -12,6 +12,7 @@ replace (
 
 require (
 	github.com/anonymous5l/console v0.0.0-20190221092207-cdcee6db6f29
+	github.com/gabriel-vasile/mimetype v0.1.3
 	github.com/urfave/cli v1.20.0
 	github.com/valyala/fasthttp v1.2.0
 )
