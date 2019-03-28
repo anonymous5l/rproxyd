@@ -44,6 +44,10 @@ func (p *ReverseProxyHandler) writeFile(request *fasthttp.RequestCtx, file strin
 		request.SetContentType(mime)
 	}
 
+	if i, err := f.Stat(); err == nil {
+		request.Response.Header.SetContentLength(int(i.Size()))
+	}
+
 	_, _ = f.Seek(io.SeekStart, 0)
 
 	request.SetBodyStream(f, -1)
