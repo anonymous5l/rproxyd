@@ -54,7 +54,7 @@ func (p *ReverseProxyHandler) listDirectory(request *fasthttp.RequestCtx, dir st
 	for _, file := range files {
 		// filter hidden file
 		if file.Name()[0] != '.' {
-			te.AppendItem(file, filepath.Join("/", dir, file.Name()))
+			te.AppendItem(file, filepath.Join(dir, file.Name()))
 		}
 	}
 
@@ -98,10 +98,16 @@ func (p *ReverseProxyHandler) Handle(request *fasthttp.RequestCtx) {
 	// try fix root path
 	if spath == "/" {
 		u.Path = p.proxyUrl.Path
-	} else if filepath.IsAbs(spath) {
-		u.Path = spath
 	} else {
-		u.Path = filepath.Join(p.proxyUrl.Path, spath)
+		if filepath.IsAbs(spath) {
+			if filepath.IsAbs(u.Path) {
+				u.Path = spath
+			} else if spath[0] == '/' {
+				u.Path = spath[1:]
+			}
+		} else {
+			u.Path = filepath.Join(p.proxyUrl.Path, spath)
+		}
 	}
 
 	u.RawQuery = string(request.URI().QueryString())
