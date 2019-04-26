@@ -46,7 +46,7 @@ func (p *ReverseProxyHandler) writeFile(request *fasthttp.RequestCtx, file strin
 
 	_, _ = f.Seek(io.SeekStart, 0)
 
-	request.SetBodyStream(f, size)
+	request.SetBodyStream(f, int(size))
 }
 
 func (p *ReverseProxyHandler) listDirectory(request *fasthttp.RequestCtx, dir string) {
