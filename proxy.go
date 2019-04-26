@@ -29,7 +29,7 @@ func NewReverseProxyHandler(proxyUrl url.URL, ch []string) *ReverseProxyHandler 
 }
 
 // writeFile read local file and write back
-func (p *ReverseProxyHandler) writeFile(request *fasthttp.RequestCtx, file string) {
+func (p *ReverseProxyHandler) writeFile(request *fasthttp.RequestCtx, file string, size int64) {
 	f, err := os.Open(file)
 
 	if err != nil {
@@ -42,12 +42,6 @@ func (p *ReverseProxyHandler) writeFile(request *fasthttp.RequestCtx, file strin
 		request.SetContentType("application/octet-stream")
 	} else {
 		request.SetContentType(mime)
-	}
-
-	size := -1
-
-	if i, err := f.Stat(); err == nil {
-		size = int(i.Size())
 	}
 
 	_, _ = f.Seek(io.SeekStart, 0)
@@ -95,12 +89,14 @@ func (p *ReverseProxyHandler) HandleIndex(request *fasthttp.RequestCtx, u url.UR
 		return
 	}
 
+	dirPath := filepath.Join("/", u.Path)
+
 	switch mode := fi.Mode(); {
 	case mode.IsDir():
 		// list directory
-		p.listDirectory(request, u.Path)
+		p.listDirectory(request, dirPath)
 	case mode.IsRegular():
-		p.writeFile(request, u.Path)
+		p.writeFile(request, dirPath, fi.Size())
 		return
 	}
 }
