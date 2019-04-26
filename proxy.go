@@ -64,7 +64,7 @@ func (p *ReverseProxyHandler) listDirectory(request *fasthttp.RequestCtx, dir st
 	for _, file := range files {
 		// filter hidden file
 		if file.Name()[0] != '.' {
-			te.AppendItem(file, filepath.Join(dir, file.Name()))
+			te.AppendItem(file, filepath.Join("/", dir, file.Name()))
 		}
 	}
 
@@ -89,7 +89,7 @@ func (p *ReverseProxyHandler) HandleIndex(request *fasthttp.RequestCtx, u url.UR
 		return
 	}
 
-	dirPath := filepath.Join("/", u.Path)
+	dirPath := u.Path
 
 	switch mode := fi.Mode(); {
 	case mode.IsDir():
